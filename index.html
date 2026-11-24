@@ -22,7 +22,7 @@ main a:first-of-type{border-color:#15803d;border-width:2px}main a span{color:#6b
 <label><input id="rm" type="checkbox" checked style="width:auto"> このブラウザで覚えておく</label>
 <button type="submit">開く</button><div class="err" id="err"></div></form></div>
 <main id="app" hidden><h1>競馬AI予想</h1><div id="list"></div></main>
-<script id="payload" type="application/json">{"enc": {"salt": "AAMv4n9EFNzADycIHlzDYw==", "iv": "zNoBvd0/Pbo6dvl9", "ct": "+SZtBIgGYciB1Yh1QxIpbZHDOcly+/tRV9NBP20LOmThW4IJHp4OHRPOALjEAgiSiWvI", "iter": 300000}}</script>
+<script id="payload" type="application/json">{"enc": {"salt": "hVLYPslVZ+hSVd9XcEJSgQ==", "iv": "SE1DGmNsDDHMy2u0", "ct": "xamnM+PgdNXzCyB+Rr5sHnOWDcCp90z0vWURBm9YjyWj5Gz4UeTPEhrcBJ9FUTRD/8zn", "iter": 300000}}</script>
 <script>
 
 const PKEY="keiba_ai_pw";
@@ -34,11 +34,14 @@ async function decrypt(e,pw){
  return JSON.parse(new TextDecoder().decode(pt));}
 function getPw(){try{return localStorage.getItem(PKEY)}catch(e){return null}}
 function setPw(v){try{v?localStorage.setItem(PKEY,v):localStorage.removeItem(PKEY)}catch(e){}}
+function showErr(e){const m=document.createElement("pre");m.style.cssText="margin:16px;padding:12px;background:#fdecec;color:#b42318;white-space:pre-wrap;font-size:13px";
+ m.textContent="ページの表示でエラーが起きました。この画面のスクリーンショットを送ってください。\n"+(e&&e.stack||e);document.body.prepend(m)}
+function run(onData,d){try{onData(d)}catch(e){showErr(e)}}
 async function unlock(onData){
- const P=JSON.parse(document.getElementById("payload").textContent);
- if(P.plain){onData(P.plain);return}
+ let P;try{P=JSON.parse(document.getElementById("payload").textContent)}catch(e){showErr(e);return}
+ if(P.plain){run(onData,P.plain);return}
  const lock=document.getElementById("lock"),app=document.getElementById("app");
- const tryPw=async pw=>{try{const d=await decrypt(P.enc,pw);lock.hidden=true;app.hidden=false;onData(d);return true}catch(e){return false}};
+ const tryPw=async pw=>{let d;try{d=await decrypt(P.enc,pw)}catch(e){return false}lock.hidden=true;app.hidden=false;run(onData,d);return true};
  const saved=getPw();if(saved&&await tryPw(saved))return;
  setPw(null);lock.hidden=false;document.getElementById("pw").focus();
  document.getElementById("lf").onsubmit=async ev=>{ev.preventDefault();const pw=document.getElementById("pw").value;
